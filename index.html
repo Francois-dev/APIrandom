@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Notes de Recherche Personnel V631</title>
+    <title>Notes de Recherche Personnel V645</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: auto; padding: 20px; background: #f0f2f5; }
         #chat-box { height: 500px; overflow-y: auto; border-radius: 8px; padding: 15px; background: white; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
@@ -11,8 +11,8 @@
         button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
         #config-area { margin-bottom: 20px; padding: 10px; background: #fff3cd; border-radius: 5px; display: none; }
         .msg { margin: 5px 0; padding: 10px; border-radius: 5px; }
-        .user-msg { background: #e7f3ff; align-self: flex-end; }
-        .ai-msg { background: #f1f0f0; align-self: flex-start; }
+        .user-msg { background: #e7f3ff; align-self: flex-end; max-width: 80%; }
+        .ai-msg { background: #f1f0f0; align-self: flex-start; max-width: 80%; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -23,7 +23,7 @@
         <button onclick="saveKey()">Enregistrer la clé</button>
     </div>
 
-    <h2>Espace de travail 644</h2>
+    <h2>Espace de travail 646</h2>
     <div id="chat-box"></div>
     
     <div class="controls">
@@ -67,39 +67,28 @@
             btn.disabled = true;
             btn.innerText = "...";
 
-try {
-    const workerUrl = "https://worker.francois-6fe.workers.dev";
-    
-    // Changement de v1beta vers v1 et vérification du chemin models/
-    const response = await fetch(`${workerUrl}/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-            contents: [{ 
-                parts: [{ text: prompt }] 
-            }] 
-        })
-    });
+            try {
+                const workerUrl = "https://worker.francois-6fe.workers.dev";
+                const response = await fetch(`${workerUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
 
-    const data = await response.json();
-    
-    if (data.error) {
-        // Cela affichera l'erreur précise renvoyée par Google s'il y en a encore une
-        throw new Error(data.error.message);
-    }
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error.message);
 
-    const text = data.candidates[0].content.parts[0].text;
-    box.innerHTML += `<div class="msg ai-msg"><strong>Gemini :</strong> ${text}</div>`;
-} catch (e) {
-    box.innerHTML += `<p style="color:red;">Erreur : ${e.message}</p>`;
-}
-
-
-            
-            
-        
+                const text = data.candidates[0].content.parts[0].text;
+                box.innerHTML += `<div class="msg ai-msg"><strong>Gemini :</strong> ${text}</div>`;
+            } catch (e) {
+                box.innerHTML += `<p style="color:red;">Erreur : ${e.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Envoyer";
+                box.scrollTop = box.scrollHeight;
+            }
+        }
     </script>
 </body>
 </html>
