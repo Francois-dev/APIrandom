@@ -67,32 +67,38 @@
             btn.disabled = true;
             btn.innerText = "...";
 
-            try {
-                // L'URL de ton Worker Cloudflare sans le slash final
-                const workerUrl = "https://worker.francois-6fe.workers.dev";
-                
-                const response = await fetch(`${workerUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+try {
+    const workerUrl = "https://worker.francois-6fe.workers.dev";
+    
+    // Changement de v1beta vers v1 et vérification du chemin models/
+    const response = await fetch(`${workerUrl}/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            contents: [{ 
+                parts: [{ text: prompt }] 
+            }] 
+        })
+    });
 
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error.message);
-                }
+    const data = await response.json();
+    
+    if (data.error) {
+        // Cela affichera l'erreur précise renvoyée par Google s'il y en a encore une
+        throw new Error(data.error.message);
+    }
 
-                const text = data.candidates[0].content.parts[0].text;
-                box.innerHTML += `<div class="msg ai-msg"><strong>Gemini :</strong> ${text}</div>`;
-            } catch (e) {
-                console.error(e);
-                box.innerHTML += `<p style="color:red;">Erreur : ${e.message}</p>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Envoyer";
-                box.scrollTop = box.scrollHeight;
-            }
+    const text = data.candidates[0].content.parts[0].text;
+    box.innerHTML += `<div class="msg ai-msg"><strong>Gemini :</strong> ${text}</div>`;
+} catch (e) {
+    box.innerHTML += `<p style="color:red;">Erreur : ${e.message}</p>`;
+}
+
+
+            
+            
         }
     </script>
 </body>
