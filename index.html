@@ -2,21 +2,21 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Espace de Travail Personnel</title>
+    <title>Espace de Travail Personnel V3</title>
     <style>
         :root { --bg: #f8f9fa; --text: #333; --primary: #007bff; --white: #ffffff; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 900px; margin: auto; padding: 20px; background: var(--bg); color: var(--text); }
         #chat-box { height: 600px; overflow-y: auto; border-radius: 12px; padding: 20px; background: var(--white); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; }
-        .controls { display: flex; gap: 10px; }
-        input { flex-grow: 1; padding: 14px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+        input { flex-grow: 1; padding: 14px; border: 1px solid #ddd; border-radius: 8px; outline: none; min-width: 200px; }
+        select { padding: 12px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; }
         button { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         button:hover { opacity: 0.9; }
         #config-area { margin-bottom: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; display: none; }
-        .msg { padding: 12px 16px; border-radius: 15px; position: relative; max-width: 85%; line-height: 1.5; }
+        .msg { padding: 12px 16px; border-radius: 15px; position: relative; max-width: 85%; line-height: 1.5; font-size: 15px; }
         .user-msg { background: #e7f3ff; align-self: flex-end; border-bottom-right-radius: 2px; }
         .ai-msg { background: #f1f0f0; align-self: flex-start; border-bottom-left-radius: 2px; white-space: pre-wrap; }
-        .copy-btn { font-size: 11px; padding: 4px 8px; background: #ddd; color: #555; border-radius: 4px; position: absolute; top: -25px; right: 0; opacity: 0.6; }
-        .copy-btn:hover { opacity: 1; background: #ccc; }
+        .copy-btn { font-size: 10px; padding: 4px 8px; background: #eee; border: 1px solid #ccc; color: #666; border-radius: 4px; position: absolute; top: -25px; right: 0; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -27,8 +27,15 @@
         <button onclick="saveKey()">Enregistrer</button>
     </div>
 
-    <h2>Espace de travail PRO</h2>
-    <div id="chat-box" id="chatBox"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h2>Espace de travail PRO FLASH</h2>
+        <select id="model-select">
+            <option value="gemini-1.5-flash-latest">Mode Rapide (Flash)</option>
+            <option value="gemini-1.5-pro-latest">Mode Expert (Pro)</option>
+        </select>
+    </div>
+
+    <div id="chat-box"></div>
     
     <div class="controls">
         <input type="text" id="user-input" placeholder="Posez votre question..." onkeypress="if(event.key === 'Enter') askGemini()">
@@ -36,7 +43,7 @@
     </div>
 
     <p style="text-align: center; margin-top: 20px;">
-        <button onclick="clearKey()" style="background:none; color:red; text-decoration:underline; font-size: 0.8em;">Effacer la clé</button>
+        <button onclick="clearKey()" style="background:none; color:red; text-decoration:underline; font-size: 0.8em; border:none; cursor:pointer;">Effacer la clé de session</button>
     </p>
 
     <script>
@@ -50,11 +57,12 @@
 
         function clearKey() { localStorage.removeItem('gemini_api_key'); location.reload(); }
 
-        async function copyText(btn, text) {
-            await navigator.clipboard.writeText(text);
-            const originalText = btn.innerText;
-            btn.innerText = "Copié !";
-            setTimeout(() => btn.innerText = originalText, 2000);
+        function copyText(btn, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const old = btn.innerText;
+                btn.innerText = "Copié !";
+                setTimeout(() => btn.innerText = old, 2000);
+            });
         }
 
         async function askGemini() {
@@ -62,6 +70,7 @@
             const input = document.getElementById('user-input');
             const box = document.getElementById('chat-box');
             const btn = document.getElementById('send-btn');
+            const model = document.getElementById('model-select').value;
             const prompt = input.value.trim();
 
             if (!apiKey || !prompt) return;
@@ -73,7 +82,7 @@
 
             try {
                 const workerUrl = "https://worker.francois-6fe.workers.dev";
-                const response = await fetch(`${workerUrl}/v1beta/models/gemini-pro-latest:generateContent?key=${apiKey}`, {
+                const response = await fetch(`${workerUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -84,14 +93,14 @@
 
                 const text = data.candidates[0].content.parts[0].text;
                 
-                // Création de l'élément message AI avec bouton copie
                 const msgDiv = document.createElement('div');
                 msgDiv.className = 'msg ai-msg';
-                msgDiv.innerHTML = `<button class="copy-btn" onclick="copyText(this, \`${text.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">Copier</button><strong>Gemini :</strong><br>${text}`;
+                const safeText = text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                msgDiv.innerHTML = `<button class="copy-btn" onclick="copyText(this, \`${text.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">Copier</button><strong>Gemini (${model.includes('pro') ? 'Pro' : 'Flash'}) :</strong><br>${text}`;
                 
                 box.appendChild(msgDiv);
             } catch (e) {
-                box.innerHTML += `<p style="color:red;">Erreur : ${e.message}</p>`;
+                box.innerHTML += `<p style="color:red; font-size: 0.9em;">Erreur : ${e.message}</p>`;
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Envoyer";
