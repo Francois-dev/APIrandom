@@ -27,7 +27,7 @@
         <button onclick="saveKey()">Enregistrer</button>
     </div>
 
-    <h2>Espace de travail 701</h2>
+    <h2>Espace de travail PRO</h2>
     <div id="chat-box" id="chatBox"></div>
     
     <div class="controls">
@@ -73,7 +73,7 @@
 
             try {
                 const workerUrl = "https://worker.francois-6fe.workers.dev";
-                const response = await fetch(`${workerUrl}/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+                const response = await fetch(`${workerUrl}/v1beta/models/gemini-pro-latest:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
