@@ -23,7 +23,7 @@
         <button onclick="saveKey()">Enregistrer la clé</button>
     </div>
 
-    <h2>Espace de travail 653</h2>
+    <h2>Espace de travail 658</h2>
     <div id="chat-box"></div>
     
     <div class="controls">
@@ -69,7 +69,7 @@
 
 try {
     const workerUrl = "https://worker.francois-6fe.workers.dev"; // Sans slash à la fin
-    const model = "gemini-1.5-flash"; // On reste sur Flash, le plus rapide
+    const model = "gemini-flash-latest"; // On reste sur Flash, le plus rapide
     
     // On construit l'URL manuellement pour éviter les erreurs de slashes
     const endpoint = `${workerUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`;
