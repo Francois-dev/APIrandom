@@ -23,7 +23,7 @@
         <button onclick="saveKey()">Enregistrer la clé</button>
     </div>
 
-    <h2>Espace de travail 651</h2>
+    <h2>Espace de travail 653</h2>
     <div id="chat-box"></div>
     
     <div class="controls">
@@ -68,13 +68,13 @@
             btn.innerText = "...";
 
 try {
-    const workerUrl = "https://worker.francois-6fe.workers.dev";
+    const workerUrl = "https://worker.francois-6fe.workers.dev"; // Sans slash à la fin
+    const model = "gemini-1.5-flash"; // On reste sur Flash, le plus rapide
     
-    // Test avec la version v1 (stable) et le nom de modèle complet
-    // Si flash ne veut vraiment pas, tu peux essayer : gemini-1.5-pro
-    const modelName = "gemini-1.5-pro"; 
+    // On construit l'URL manuellement pour éviter les erreurs de slashes
+    const endpoint = `${workerUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`;
     
-    const response = await fetch(`${workerUrl}/v1/models/${modelName}:generateContent?key=${apiKey}`, {
+    const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -87,18 +87,12 @@ try {
     const data = await response.json();
     
     if (data.error) {
-        // Si ça échoue encore, on affiche le détail technique pour comprendre
         throw new Error(`${data.error.status} : ${data.error.message}`);
-    }
-
-    if (!data.candidates || data.candidates.length === 0) {
-        throw new Error("Aucune réponse reçue de l'IA.");
     }
 
     const text = data.candidates[0].content.parts[0].text;
     box.innerHTML += `<div class="msg ai-msg"><strong>Gemini :</strong> ${text}</div>`;
 } catch (e) {
-    console.error("Détail de l'erreur:", e);
     box.innerHTML += `<p style="color:red;">Erreur technique : ${e.message}</p>`;
 }
         }
