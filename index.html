@@ -23,7 +23,7 @@
         <button onclick="saveKey()">Enregistrer la clé</button>
     </div>
 
-    <h2>Espace de travail 646</h2>
+    <h2>Espace de travail 650</h2>
     <div id="chat-box"></div>
     
     <div class="controls">
@@ -67,27 +67,40 @@
             btn.disabled = true;
             btn.innerText = "...";
 
-            try {
-                const workerUrl = "https://worker.francois-6fe.workers.dev";
-                const response = await fetch(`${workerUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+try {
+    const workerUrl = "https://worker.francois-6fe.workers.dev";
+    
+    // Test avec la version v1 (stable) et le nom de modèle complet
+    // Si flash ne veut vraiment pas, tu peux essayer : gemini-1.5-pro
+    const modelName = "gemini-1.5-flash"; 
+    
+    const response = await fetch(`${workerUrl}/v1/models/${modelName}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            contents: [{ 
+                parts: [{ text: prompt }] 
+            }] 
+        })
+    });
 
-                const data = await response.json();
-                
-                if (data.error) throw new Error(data.error.message);
+    const data = await response.json();
+    
+    if (data.error) {
+        // Si ça échoue encore, on affiche le détail technique pour comprendre
+        throw new Error(`${data.error.status} : ${data.error.message}`);
+    }
 
-                const text = data.candidates[0].content.parts[0].text;
-                box.innerHTML += `<div class="msg ai-msg"><strong>Gemini :</strong> ${text}</div>`;
-            } catch (e) {
-                box.innerHTML += `<p style="color:red;">Erreur : ${e.message}</p>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Envoyer";
-                box.scrollTop = box.scrollHeight;
-            }
+    if (!data.candidates || data.candidates.length === 0) {
+        throw new Error("Aucune réponse reçue de l'IA.");
+    }
+
+    const text = data.candidates[0].content.parts[0].text;
+    box.innerHTML += `<div class="msg ai-msg"><strong>Gemini :</strong> ${text}</div>`;
+} catch (e) {
+    console.error("Détail de l'erreur:", e);
+    box.innerHTML += `<p style="color:red;">Erreur technique : ${e.message}</p>`;
+}
         }
     </script>
 </body>
